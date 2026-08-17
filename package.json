@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zo": "^0.0.2"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "base_url": "https://staging.metafusion.ai/#/auth/login",
+  "browser": "chromium",
+  "headless": false,
+  "slow_mo": 0,
+  "timeout": 30000
+}

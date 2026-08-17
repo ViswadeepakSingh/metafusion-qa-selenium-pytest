@@ -1,0 +1,14 @@
+{
+  "valid_user": {
+    "username": "admin@metafusion.ai",
+    "password": "Admin@123"
+  },
+  "invalid_user": {
+    "username": "invalid@metafusion.ai",
+    "password": "wrongpass"
+  },
+  "search": {
+    "keyword": "sample emitter",
+    "filter_type": "Camera"
+  }
+}
