@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 
 
 def _xpath_str(value):
-    """Safely quote a string for XPath (handles embedded quotes)."""
+    """Safely quote a string for XPath."""
     if "'" not in value:
         return f"'{value}'"
 
@@ -38,10 +38,46 @@ class DashboardsLocators:
             ")]"
         ),
 
+        
+        # ================================================================
+        # Dashboard cards
+        # ================================================================
+
         "card_level": (
             By.XPATH,
-            "//div[contains(@class, 'layout-name')]"
+            "//div[contains(@class, 'layout-card') and contains(@class, 'view')]"
         ),
+
+        "card_title": (
+            By.XPATH,
+            ".//div[contains(@class, 'layout-name')]"
+        ),
+
+        "card_label": (
+            By.XPATH,
+            ".//div[contains(@class, 'layout-name')]/span[normalize-space()='DASHBOARD']"
+        ),
+
+        "card_updated_on": (
+            By.XPATH,
+            ".//div[contains(@class, 'layout-footer')]//*[contains(normalize-space(), 'Updated on')]"
+        ),
+
+        "card_widgets_badge": (
+            By.XPATH,
+            ".//div[contains(@class, 'widget-count') and contains(normalize-space(), 'Widget')]"
+        ),
+
+        "card_default_badge": (
+            By.XPATH,
+            ".//*[normalize-space()='Default']"
+        ),
+
+        "card_menu_trigger": (
+            By.XPATH,
+            ".//div[contains(@class, 'layout-top')]//button"
+        ),
+        
         # ================================================================
         # Create / Rename form
         # ================================================================
@@ -62,7 +98,18 @@ class DashboardsLocators:
         ),
 
         # ================================================================
-        # Empty-state + Add Dashboard
+        # Validation
+        # ================================================================
+
+        "validation_error": (
+            By.XPATH,
+            "//*[contains(@class, 'error') "
+            "or contains(@class, 'invalid') "
+            "or @role='alert']"
+        ),
+
+        # ================================================================
+        # Add Dashboard
         # ================================================================
 
         "add_dashboard_card": (
@@ -72,9 +119,40 @@ class DashboardsLocators:
             "or @aria-label='Add Dashboard' "
             "or @title='Add' "
             "or @title='Add Dashboard' "
-            "or normalize-space()='+' "
-            "or .//img[contains(@src,'plus') "
-            "or contains(@src,'add')]]"
+            "or normalize-space()='+']"
+        ),
+
+        # ================================================================
+        # Context Menu
+        # ================================================================
+
+        "context_menu": (
+            By.XPATH,
+            "//div[contains(@class, 'layout-modal')]"
+        ),
+
+        "context_menu_items": (
+            By.XPATH,
+            "//div[contains(@class, 'layout-modal')]//li"
+        ),
+
+        # ================================================================
+        # Delete Confirmation Dialog
+        # ================================================================
+
+        "confirm_dialog": (
+            By.XPATH,
+            "//*[@role='dialog']"
+        ),
+
+        "confirm_dialog_confirm": (
+            By.XPATH,
+            "//*[@role='dialog']//button[normalize-space()='Delete']"
+        ),
+
+        "confirm_dialog_cancel": (
+            By.XPATH,
+            "//*[@role='dialog']//button[normalize-space()='Cancel']"
         ),
 
         # ================================================================
@@ -86,23 +164,15 @@ class DashboardsLocators:
             "//*[normalize-space()='DASHBOARDS']"
         ),
 
-        # ================================================================
-        # Saved dashboard card
-        # ================================================================
-
-        "card_label": (
-            By.XPATH,
-            "//*[normalize-space()='DASHBOARD']"
-        ),
-
+        # Backward-compatible names
         "updated_on": (
             By.XPATH,
-            "//*[contains(normalize-space(),'Updated on')]"
+            "//*[contains(normalize-space(), 'Updated on')]"
         ),
 
         "widgets_badge": (
             By.XPATH,
-            "//*[contains(normalize-space(),'Widget')]"
+            "//*[contains(normalize-space(), 'Widget')]"
         ),
     }
 
@@ -147,6 +217,14 @@ class DashboardsLocators:
             f"//button[normalize-space()={_xpath_str(text)}]"
         )
 
+    @staticmethod
+    def menu_item_by_text(text):
+        return (
+            By.XPATH,
+            "//div[contains(@class, 'layout-modal')]"
+            f"//li[contains(normalize-space(), {_xpath_str(text)})]"
+        )
+
     # ====================================================================
     # Text configuration
     # ====================================================================
@@ -161,7 +239,6 @@ class DashboardsLocators:
 
     cancel_name = "Cancel"
 
-    # Context menu options
     menu_item_labels = [
         "Open",
         "Rename",
