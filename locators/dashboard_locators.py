@@ -221,8 +221,7 @@ class DashboardsLocators:
     def menu_item_by_text(text):
         return (
             By.XPATH,
-            "//div[contains(@class, 'layout-modal')]"
-            f"//li[contains(normalize-space(), {_xpath_str(text)})]"
+            f"//li[normalize-space()={_xpath_str(text)}]"
         )
 
     # ====================================================================

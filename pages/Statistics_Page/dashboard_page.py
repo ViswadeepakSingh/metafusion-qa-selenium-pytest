@@ -12,6 +12,7 @@ Classes:
 import re
 
 from selenium.common.exceptions import (
+    ElementClickInterceptedException,
     NoSuchElementException,
     StaleElementReferenceException,
     TimeoutException,
@@ -100,10 +101,38 @@ class DashboardForm:
 
     # TC-DB11, TC-DB12, TC-DB27, TC-DB28, TC-DB29, TC-DB31, TC-DB32
     def save(self):
+        save_locator = self.locators.get("save_button")
+
+        save_button = self.wait.until(
+            EC.presence_of_element_located(save_locator)
+        )
+
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});",
+            save_button
+        )
+
+        try:
+            self.wait.until(
+                EC.element_to_be_clickable(save_locator)
+            ).click()
+
+        except (
+            TimeoutException,
+            ElementClickInterceptedException,
+        ):
+            save_button = self.wait.until(
+                EC.visibility_of_element_located(save_locator)
+            )
+
+            self.driver.execute_script(
+                "arguments[0].click();",
+                save_button
+            )
+
         self.wait.until(
-            EC.element_to_be_clickable(self.SAVE_BUTTON)
-        ).click()
-        return self
+            EC.invisibility_of_element_located(save_locator)
+        )
 
     # TC-DB08, TC-DB09, TC-DB10, TC-DB13, TC-DB14, TC-DB26, TC-DB28, TC-DB29, TC-DB30
     # pages/Statistics_Page/dashboard_page.py
@@ -338,7 +367,35 @@ class ContextMenu:
 
         self.wait_until_closed()
         return self
+    
+    def has_menu_item(self, label):
+        try:
+            element = self.element.find_element(
+                By.XPATH,
+                f".//li[normalize-space()='{label}']"
+            )
 
+            return element.is_displayed()
+
+        except NoSuchElementException:
+            return False
+
+    def has_set_default(self):
+        """
+        Returns True if 'Set as Default' is visible in the context menu.
+        """
+
+        try:
+            items = self.driver.find_elements(*self.ALL_ITEMS)
+
+            return any(
+                item.is_displayed()
+                and item.text.strip() == "Set as Default"
+                for item in items
+            )
+
+        except NoSuchElementException:
+            return False
 
 # ===========================================================================
 # Dashboard Card
@@ -629,14 +686,36 @@ class DashboardPage:
 
     # TC-DB08, TC-DB09, TC-DB10, TC-DB11, TC-DB12, TC-DB13, TC-DB14
     def click_add_card(self):
-        self.wait.until(
-            EC.element_to_be_clickable(
-                self.locators.get("add_dashboard_card")
+        locator = self.locators.get("add_dashboard_card")
+
+        # Wait until the Add Dashboard control is present
+        element = self.wait.until(
+            EC.presence_of_element_located(locator)
+        )
+
+        # Scroll it into view
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});",
+            element
+        )
+
+        # Try normal click first
+        try:
+            self.wait.until(
+                EC.element_to_be_clickable(locator)
+            ).click()
+
+        except Exception:
+            # Fallback for elements that are present/visible
+            # but Selenium considers not clickable
+            self.driver.execute_script(
+                "arguments[0].click();",
+                element
             )
-        ).click()
 
         form = DashboardForm(self.driver, self.locators)
         form.wait_until_open()
+
         return form
 
     # -----------------------------------------------------------------------

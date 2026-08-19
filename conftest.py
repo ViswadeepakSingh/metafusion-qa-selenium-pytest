@@ -981,26 +981,37 @@ def analytics_dashboard(
 # Disposable dashboard
 # =============================================================================
 
+# =============================================================================
+# Disposable dashboard
+# =============================================================================
+
 @pytest.fixture(scope="function")
-def disposable_dashboard(
-    manage_view,
-):
+def disposable_dashboard(manage_view):
     """
     Create a temporary dashboard for a test.
+
+    Flow:
+        1. Generate unique dashboard name
+        2. Create dashboard
+        3. Wait until dashboard appears
+        4. Yield dashboard name to test
+        5. Delete dashboard during teardown
 
     Example:
 
         def test_something(
             self,
             manage_view,
-            disposable_dashboard
+            disposable_dashboard,
         ):
             card = manage_view.get_card_by_name(
                 disposable_dashboard
             )
-
-    The dashboard is automatically deleted after the test.
     """
+
+    # -------------------------------------------------------------------------
+    # Generate unique dashboard name
+    # -------------------------------------------------------------------------
 
     name = (
         f"AutoTest DB "
@@ -1036,6 +1047,10 @@ def disposable_dashboard(
         name
     )
 
+    # -------------------------------------------------------------------------
+    # Verify dashboard was created
+    # -------------------------------------------------------------------------
+
     card = manage_view.get_card_by_name(
         name
     )
@@ -1047,52 +1062,85 @@ def disposable_dashboard(
             "was not created."
         )
 
+    logger.info(
+        "Disposable dashboard created successfully: %s",
+        name,
+    )
+
+    # -------------------------------------------------------------------------
+    # Give dashboard name to test
+    # -------------------------------------------------------------------------
+
+    yield name
+
+    # -------------------------------------------------------------------------
+    # Cleanup
+    # -------------------------------------------------------------------------
+
     try:
 
-        yield name
+        logger.info(
+            "Cleaning up disposable dashboard: %s",
+            name,
+        )
 
-    finally:
+        # Find the dashboard again.
+        manage_view.wait_for_card_present(
+            name
+        )
 
-        # ---------------------------------------------------------------------
-        # Cleanup dashboard
-        # ---------------------------------------------------------------------
+        card = manage_view.get_card_by_name(
+            name
+        )
 
-        try:
-
-            # Refresh lookup because the card may have become stale.
-            manage_view.wait_for_card_present(
-                name
-            )
-
-            card = manage_view.get_card_by_name(
-                name
-            )
-
-            if card is not None:
-
-                menu = card.open_context_menu()
-
-                dialog = menu.click_delete()
-
-                dialog.confirm()
-
-                manage_view.wait_for_card_absent(
-                    name
-                )
-
-                logger.info(
-                    "Disposable dashboard deleted: %s",
-                    name,
-                )
-
-        except Exception as error:
+        if card is None:
 
             logger.warning(
-                "Could not cleanup disposable dashboard '%s': %s",
+                "Disposable dashboard '%s' "
+                "was not found during cleanup.",
                 name,
-                error,
             )
 
+            return
+
+        # ---------------------------------------------------------------------
+        # Open three-dot menu
+        # ---------------------------------------------------------------------
+
+        menu = card.open_context_menu()
+
+        # ---------------------------------------------------------------------
+        # Click Delete
+        # ---------------------------------------------------------------------
+
+        dialog = menu.click_delete()
+
+        # ---------------------------------------------------------------------
+        # Confirm deletion
+        # ---------------------------------------------------------------------
+
+        dialog.confirm()
+
+        # ---------------------------------------------------------------------
+        # Verify dashboard is deleted
+        # ---------------------------------------------------------------------
+
+        manage_view.wait_for_card_absent(
+            name
+        )
+
+        logger.info(
+            "Disposable dashboard deleted: %s",
+            name,
+        )
+
+    except Exception as error:
+
+        logger.warning(
+            "Could not cleanup disposable dashboard '%s': %s",
+            name,
+            error,
+        )
 
 # =============================================================================
 # Screenshot on test failure
